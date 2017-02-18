@@ -154,6 +154,12 @@ def bitwise_complement_string(s):
 
 # https://rosettacode.org/wiki/Miller%E2%80%93Rabin_primality_test#Python:_Proved_correct_up_to_large_N
 def is_prime(n, _precision_for_huge_n=16):
+    """
+    Determines whether number n is prime.
+
+    :param n: number
+    :return: boolean
+    """
     def _try_composite(a, d, n, s):
         if pow(a, d, n) == 1:
             return False
@@ -194,6 +200,13 @@ def is_prime(n, _precision_for_huge_n=16):
 
 
 def prime_between(s, e):
+    """
+    Returns a random prime between s and e (inclusive).
+
+    :param s: lower bound
+    :param e: upper bound
+    :return: random prime
+    """
     candidate = random.randint(s, e)
 
     while not (is_prime(candidate)):
@@ -202,8 +215,97 @@ def prime_between(s, e):
     return candidate
 
 def exp(a, n, N):
-	r = 1
-	for i in range(n.bit_length() - 1, -1, -1):
-		r = ((r*r) * (a if (n >> i) & 0x1 else 1)) % N
+    """
+    Returns a raised to the n-th power mod N.
 
-	return r
+    :param a: base
+    :param n: exponent
+    :param N: modulus
+    :return: Integer a^n mod N
+    """
+    r = 1
+    for i in range(n.bit_length() - 1, -1, -1):
+        r = ((r*r) * (a if (n >> i) & 0x1 else 1)) % N
+
+    return r
+
+def in_Z_N_star(a, N):
+    """
+    Determines whether a is in Z_n^*.
+
+    :param a: number to be checked
+    :param N: N
+    :return: Boolean
+    """
+    if a < 0 or a>=N:
+        return False
+    return(egcd(a,N)[0] == 1)
+
+def random_Z_N_star(N):
+    """
+    Returns the a random element in Z_N^*.
+
+    :param N: N
+    :return: random element
+    """
+    candidate = random.randint(1, N-1)
+
+    while not (in_Z_N_star(candidate, N)):
+        candidate = random.randint(1, N-1)
+
+    return candidate
+
+def random_Z_N(N):
+    """
+    Returns the a random element in Z_N.
+
+    :param N: N
+    :return: random element
+    """
+    return random.randint(0, N-1)
+
+def find_generator_Z_N_star(N, pstatements = False):
+    """
+    Returns a generator of Z_N_star.
+
+    :param N: N
+    :return: The generator.
+    """
+
+    if N == 2:
+        return 1
+
+    if is_prime(N):
+        order = N-1
+        g = 2
+        while g <= N-1:
+            i = 2
+            curr = (g**2) % N
+            works = True
+            while i < order:
+                if curr == 1: 
+                    works = False
+                    break
+                i += 1
+                curr = (curr*g) % N
+            if works:
+                return g
+            elif pstatements:
+                print 'Not ' + str(g)
+            g += 1
+    else:
+        ZNstar = set([i for i in range(0,N) if in_Z_N_star(i,N)])
+
+
+
+        for g in ZNstar:
+            S = set([exp(g,i,N) for i in range(0,N)])
+            S = set([i for i in S if in_Z_N_star(i,N)])
+            if len(S.symmetric_difference(ZNstar)) == 0:
+                return g
+            if pstatements:
+                print 'Not ' + str(g)
+        return None
+
+
+    
